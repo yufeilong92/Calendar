@@ -18,7 +18,7 @@ class MainActivity : AppCompatActivity() {
 
     private var currentCalendars: ArrayList<Calendar> = ArrayList<Calendar>()
     private var calendarAdapter: CalendarViewAdapter? = null
-    private val onSelectDateListener: OnSelectDateListener? = null
+    private var onSelectDateListener: OnSelectDateListener? = null
     private var mCurrentPage: Int = MonthPager.CURRENT_DAY_INDEX
     private var context: Context? = null
     private var currentDate: CalendarDate? = null
@@ -38,7 +38,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initCurrentDate() {
-
         currentDate = CalendarDate()
         show_year_view.setText(currentDate?.getYear().toString() + "年")
         show_month_view.setText(currentDate?.getMonth().toString() + "")
@@ -58,26 +57,23 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-
-
-
     private fun initListener() {
-
-        back_today_button.setOnClickListener(View.OnClickListener { onClickBackToDayBtn() })
-        scroll_switch.setOnClickListener(View.OnClickListener {
-            if (calendarAdapter!!.calendarType === CalendarAttr.CalendarType.WEEK) {
-                Utils.scrollTo(content, list, calendar_view.getViewHeight(), 200)
-                calendarAdapter!!.switchToMonth()
-            } else {
-                Utils.scrollTo(content, list, calendar_view.getCellHeight(), 200)
-                calendarAdapter!!.switchToWeek(calendar_view.getRowIndex())
+        onSelectDateListener = object : OnSelectDateListener {
+            override fun onSelectDate(date: CalendarDate?) {
+                refreshClickDate(date!!)
             }
-        })
-        theme_switch.setOnClickListener(View.OnClickListener { refreshSelectBackground() })
-        next_month.setOnClickListener(View.OnClickListener { calendar_view.setCurrentItem(calendar_view.getCurrentPosition() + 1) })
-        last_month.setOnClickListener(View.OnClickListener { calendar_view.setCurrentItem(calendar_view.getCurrentPosition() - 1) })
-    }
 
+            override fun onSelectOtherMonth(offset: Int) {
+                //偏移量 -1表示刷新成上一个月数据 ， 1表示刷新成下一个月数据
+                calendar_view.selectOtherMonth(offset)
+            }
+        }
+    }
+    private fun refreshClickDate(date: CalendarDate) {
+        currentDate = date
+        show_year_view.setText(date.getYear().toString() + "年")
+        show_month_view.setText(date.getMonth().toString() + "")
+    }
     private fun initToolbarClickListener() {
 
         back_today_button.setOnClickListener(View.OnClickListener { onClickBackToDayBtn() })
@@ -146,6 +142,12 @@ class MainActivity : AppCompatActivity() {
             override   fun onPageScrollStateChanged(state: Int) {}
         })
     }
+    private fun refreshMonthPager() {
+        val today = CalendarDate()
+        calendarAdapter!!.notifyDataChanged(today)
+        show_year_view.setText(today.getYear().toString() + "年")
+        show_month_view.setText(today.getMonth().toString() + "")
+    }
 
 
     fun onClickBackToDayBtn() {
@@ -162,12 +164,6 @@ class MainActivity : AppCompatActivity() {
         markData["2017-6-9"] = "1"
         markData["2017-6-10"] = "0"
         calendarAdapter!!.setMarkData(markData)
-    }
-    private fun refreshMonthPager() {
-        val today = CalendarDate()
-        calendarAdapter!!.notifyDataChanged(today)
-        show_year_view.setText(today.getYear().toString() + "年")
-        show_month_view.setText(today.getMonth().toString() + "")
     }
 
     private fun refreshSelectBackground() {
